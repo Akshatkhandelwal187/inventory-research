@@ -7,20 +7,34 @@ phase summary.
 
 ## Current focus
 
-Phase 4 — optimality proofs for the novel model. Phase 3 (a/b/c) is now
-fully implemented and validated; Phase 4 will formalise the structural
-results derived in passing (effective-cost reduction, closed-form G*,
-KKT shadow-price recovery) into stand-alone proofs.
+Phase 6 — paper writing. Phase 5 is complete: five gap-driven
+sensitivity sweeps (`analysis/sweep_g1.py` through `sweep_g5.py`)
+produce the publication CSVs and PDF figures, each with a short
+findings note (`analysis/sensitivity_g{1..5}_findings.md`). Gap G6
+(deteriorating items) is documented as deferred out of Phase 5 in
+`analysis/sensitivity_g6_deferred.md` and tracked for a future paper.
+Smoke tests in `tests/test_sensitivity.py` re-run every sweep and
+check both artifact creation and a structural identity per gap (12
+tests; full suite now 423, all passing).
 
 ## Open decisions
 
-- Notation freeze: docs/notation.md frozen at Phase 2.5. Phases 3b and 3c
+- Notation freeze: docs/notation.md frozen at Phase 2.5. Phases 3b, 3c, and 4
   stayed inside the freeze (no new symbols).
 - Numerical solver default: univariate scipy `minimize_scalar` for the
   inner G search; `brentq` for the strict-cap shadow-price recovery.
   Phase 3c required no multivariate solver — every solve reduces to
   Phase 3b at a (p_c, C_cap) pair, with strict cap recovering p_c=psi*
   via brentq on `emissions(psi) - C_cap = 0`.
+- Proof strategy: P1 and P2 are algebraic identities (verified to 1e-12);
+  P3 is a strictly-convex univariate FOC argument (closed form to 1e-9);
+  P4 invokes Lagrangian duality + envelope theorem + Bolzano (verified by
+  finite differences to 1e-4 and KKT residuals to 1e-7). No global
+  monotonicity of E_3a in p_c is asserted in P1 (Sicilia's x* shifts with
+  h_eff = h + p_c·e_h, breaking the EOQ-style monotonicity from Hua's
+  Theorem 2 when backlogs are active). P4 only requires continuity of
+  E(·) and feasibility at psi_upper, which the Lagrangian argument
+  supplies through Berge's maximum theorem.
 - G convention: Phase 3b adopts a *per-time* convention for G and R(G)
   (matching docs/notation.md), which differs from Hasan 2021's per-cycle
   convention. The R(G) functional form is identical; only the units of
@@ -29,6 +43,15 @@ KKT shadow-price recovery) into stand-alone proofs.
   problem with psi recovered via KKT, *not* Hasan's "psi as input"
   treatment that left E*(Q,G) ≠ W. Documented in
   `stage_3c_multipolicy.py` docstring.
+- Phase 5 sweep parameter point: a single `analysis._common.BASE` is
+  used by every gap sweep so figures and findings cross-reference
+  cleanly. Choice rationale (in `analysis/_common.py`): A_eff = 30,
+  h_eff = 0.55, p_c*a = 1.5 puts G* in the interior; net emissions
+  ~7.2 keep cap rebates moderate; T* ~ 2.79 puts the cycle structure
+  away from degenerate regimes. The notebook stubs
+  (`analysis/sensitivity_g{1,2,4}*.ipynb`) predate the Phase 5
+  scripts and are superseded by the .py sweeps; left in place so as
+  not to disturb existing references.
 
 ## Blockers
 
@@ -130,6 +153,77 @@ KKT shadow-price recovery) into stand-alone proofs.
   raises demand and operating cost. Investment kicks in only when
   demand coupling is weak / a is large -- documented in
   `test_strict_cap_invests_in_green_when_demand_coupling_weak`.
+- 2026-04-26 — Phase 5 complete. Five gap-driven sweeps under
+  `analysis/sweep_g{1..5}.py`, each emitting a CSV (`analysis/`),
+  a publication PDF (`analysis/figures/`), and a short findings note.
+  All sweeps anchored to a single reference point `analysis._common.BASE`
+  (D0=300, n=2, alpha=1.5, h=0.05, s=0.10, K=20, e_K=20, e_h=1, a=3,
+  b=0.5, p_c=0.5, C_cap=10) so figures cross-reference cleanly.
+  Headline findings:
+    G1 (vary n in [0.30, 5.00]): T*(n) is hump-shaped with peak near
+       n=1; carbon-regulated cost spans ~17.3-22.1 across the range,
+       so carrying Hua-style uniform-demand recommendations onto power
+       demand under-provisions setups for both concave and convex
+       consumption.
+    G2 (vary s in [0.02, 1.00], three p_c levels): backlog ratio x*
+       drifts +132.9% from p_c=0 to p_c=2 at fixed s=0.10. Mechanism:
+       h_eff = h+p_c*e_h grows with p_c but s stays put, so the firm
+       re-weights inventory toward backlogs to dodge carbon-priced
+       holding -- a *modelling artefact* of unpriced backlog
+       emissions. Argues for adding e_s in future work; the Phase-3a
+       reduction extends to s_eff = s+p_c*e_s without further changes.
+    G3 (25 x 25 grid in (p_c, a)): G* = 0 throughout the half-plane
+       p_c*a <= 1 (Proposition P3 closed form holds on the grid),
+       interior elsewhere. Heatmap matches the analytic boundary to
+       grid resolution; smoke test enforces this with a tolerance of
+       1e-6.
+    G4 (two sweeps, vary p_c then C_cap): tax cost is invariant in
+       C_cap (no cap term); cap-trade cost = tax cost - p_c*C_cap;
+       strict-cap decisions are invariant in p_c. Lagrangian
+       equivalence (P4) coincides exactly at the single point
+       p_c = psi*. Costs and emissions track the predictions of P1
+       and P4 across the swept ranges.
+    G5 (vary D_1 in [0, 6]): cap-and-trade exhibits a sharp corner
+       transition -- G* falls smoothly to 0 around D_1~3 because
+       demand growth from R(G) inflates operating cost by more than
+       it saves carbon. Strict cap (binding C_cap=5) does *not* hit
+       the corner: the firm is forced to invest, with G* tapering
+       from 1.555 to 1.164 and psi* rising from 0.692 to 0.833.
+       The regulatory regime therefore changes whether coupling
+       encourages or discourages investment -- a refinement of
+       Hasan (2021)'s monotone-coupling claim.
+    G6 (deferred): deteriorating items not in the current model;
+       extension would replace I_h with a theta-modified holding
+       integral and carry through Proposition P1 unchanged.
+       Documented in `analysis/sensitivity_g6_deferred.md`.
+  Smoke tests (`tests/test_sensitivity.py`, 12 tests) re-run every
+  sweep and assert the CSV / PDF / findings artifacts plus one
+  structural identity per gap (e.g., G3's corner condition,
+  G4's tax invariance in C_cap). Full suite 423 tests, all passing.
+- 2026-04-26 — Phase 4 complete. `docs/proofs.md` formalises four
+  propositions and `tests/test_proofs.py` provides numerical verification
+  (165 tests, all passing; full suite 411 across the project).
+    P1. *Effective-cost reduction.* Phase 3a TC = Sicilia TC at
+        (A_eff, h_eff) − p_c·C_cap; argmin coincides; optimal-cost identity
+        TC*_3a + p_c·C_cap = 2·A_eff/T*. Verified to 1e-12.
+    P2. *Green-tech separability.* For fixed G, Phase 3b argmin in
+        (Q,T,B) equals Phase 3a argmin at D(G); the green-tech term
+        G − p_c·R(G) is independent of (Q,T,B). Bracket [0, a/(2b)] is
+        tight (symmetry argument: any G > a/(2b) is dominated by its
+        reflection G' = a/b − G).
+    P3. *Closed-form G*.* For D_1=0, the inner objective φ(G) = G − p_c·R(G)
+        is strictly convex (φ''=2·p_c·b > 0); FOC + projection onto
+        [0, a/(2b)] gives G* = max(0, (a − 1/p_c)/(2b)). Comparative
+        statics: ∂G*/∂p_c > 0, ∂G*/∂a > 0, ∂G*/∂b < 0; asymptote
+        G* → a/(2b), R(G*) → a²/(4b) as p_c → ∞.
+    P4. *KKT shadow-price recovery.* The Phase 3b cost at p_c=ψ is the
+        Lagrangian of the strict cap (modulo constant −ψ·C_cap); the dual
+        value V(ψ) is concave in ψ (pointwise infimum of affine functions),
+        so by envelope dV/dψ = E(ψ) − C_cap and E(ψ) is non-increasing.
+        Existence of ψ* via Bolzano on E(ψ) − C_cap = 0; complementary
+        slackness ψ*·(E − C_cap) = 0 verified to 1e-8; Lagrangian
+        equivalence (decisions and *cost* coincide between strict-cap and
+        cap-and-trade at p_c = ψ*) verified to 1e-7.
 - 2026-04-26 — Phase 3b complete. `solve_power_demand_cap_and_trade_with_green`
   layers Hasan green-tech investment G onto the Phase 3a backbone via
   the per-time convention (G in currency/time, R(G) in emissions/time —
