@@ -7,7 +7,7 @@ phase summary.
 
 ## Current focus
 
-Phase 2c — recreate Benjaafar, Li & Daskin (2013) multi-policy lot-sizing baseline.
+Phase 2d — recreate Hasan, Roy, Daryanto & Wee (2021) green-tech investment baseline.
 
 ## Open decisions
 
@@ -41,3 +41,17 @@ Phase 2c — recreate Benjaafar, Li & Daskin (2013) multi-policy lot-sizing base
   every row. Row 1 has a printed-Q typo in the paper (8453 vs the
   formula-correct 8485 that matches the same row's a0 column);
   documented in the test file.
+- 2026-04-26 — Phase 2c complete. Benjaafar et al. (2013) does not
+  publish a Hua-style numerical table — its reported results are 15
+  qualitative figures from a 15-period MILP whose per-figure
+  parameters are not all printed. We therefore implement the paper's
+  analytical companion (Appendix II-B, Theorem A.1): three closed-form
+  EOQ-style policies (`solve_benjaafar_2013_strict_cap`, `_tax`,
+  `_offset`). Validation (25 tests) covers all three Theorem-A.1
+  regimes (cap not binding / binding / infeasible), the K/h vs e/h_e
+  trichotomy that picks Q1 vs Q2, the equivalence of the tax solver
+  with Hua 2011 cap-and-trade at a=0, and the cap-and-offset
+  three-regime structure. The multi-period MILP (P1-P7) is deferred;
+  its discrete formulation does not yield clean unit-tests against
+  printed numbers, and Phase 3c will be built on the analytical EOQ
+  layer instead.
