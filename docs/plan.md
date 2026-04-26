@@ -7,15 +7,28 @@ phase summary.
 
 ## Current focus
 
-Phase 3b — extend the novel model with Hasan-style green-tech investment
-G on top of the Phase 3a power-demand cap-and-trade backbone.
+Phase 4 — optimality proofs for the novel model. Phase 3 (a/b/c) is now
+fully implemented and validated; Phase 4 will formalise the structural
+results derived in passing (effective-cost reduction, closed-form G*,
+KKT shadow-price recovery) into stand-alone proofs.
 
 ## Open decisions
 
-- Notation freeze: defer until two baselines are implemented (see docs/notation.md).
-- Numerical solver default: `scipy.optimize.minimize_scalar` for univariate,
-  `brentq` for FOC roots. Reconsider if Phase 3b joint optimisation in (Q, T, G)
-  forces a multivariate solver.
+- Notation freeze: docs/notation.md frozen at Phase 2.5. Phases 3b and 3c
+  stayed inside the freeze (no new symbols).
+- Numerical solver default: univariate scipy `minimize_scalar` for the
+  inner G search; `brentq` for the strict-cap shadow-price recovery.
+  Phase 3c required no multivariate solver — every solve reduces to
+  Phase 3b at a (p_c, C_cap) pair, with strict cap recovering p_c=psi*
+  via brentq on `emissions(psi) - C_cap = 0`.
+- G convention: Phase 3b adopts a *per-time* convention for G and R(G)
+  (matching docs/notation.md), which differs from Hasan 2021's per-cycle
+  convention. The R(G) functional form is identical; only the units of
+  (a, b, G) change. Documented in `stage_3b_with_green.py` docstring.
+- Strict-cap interpretation: Phase 3c implements the rigorous strict-cap
+  problem with psi recovered via KKT, *not* Hasan's "psi as input"
+  treatment that left E*(Q,G) ≠ W. Documented in
+  `stage_3c_multipolicy.py` docstring.
 
 ## Blockers
 
@@ -94,3 +107,46 @@ G on top of the Phase 3a power-demand cap-and-trade backbone.
   separate LINGO worksheet bug — so we validate qualitative
   monotonicity only for those tables.  51 tests passing; full suite
   147 across all four baselines.
+- 2026-04-26 — Phase 3c complete. `solve_tax`, `solve_cap_and_trade`
+  (alias for Phase 3b), `solve_strict_cap`, plus a `compare_policies`
+  helper. Each policy reduces to Phase 3b at a (p_c, C_cap) pair:
+      Tax              -> p_c = p_c (input),     C_cap = 0
+      Cap-and-trade    -> p_c = p_c (input),     C_cap = C_cap (input)
+      Strict cap       -> p_c = psi (shadow),    C_cap = C_cap (input)
+  with psi recovered by brentq on emissions(psi) - C_cap = 0 over
+  [0, psi_upper]. Implemented the rigorous strict-cap formulation
+  (KKT-based; psi is an output, not Hasan's "psi as input" approach
+  that left E*(Q,G) ≠ W). 19 tests passing (246 total): tax = Phase 3b
+  at C_cap=0 to 1e-12 (5 carbon-price grids); strict-cap loose-cap
+  reduces to pure Sicilia with G*=0; tight-cap recovers psi*>0 with
+  emissions=C_cap to 1e-7; psi* monotone non-increasing in C_cap;
+  Lagrangian equivalence (strict cap and cap-and-trade at p_c=psi*
+  give identical decisions and identical *cost* because the carbon
+  trade term vanishes when emissions=C_cap exactly); cost difference
+  cap_trade − tax = -p_c·C_cap. Notable observation: with strong
+  demand coupling (D_1 large) under strict cap, the firm prefers to
+  satisfy the cap via Q-adjustment rather than green-tech investment
+  (G*=0 even at binding cap), because in cost-min raising G also
+  raises demand and operating cost. Investment kicks in only when
+  demand coupling is weak / a is large -- documented in
+  `test_strict_cap_invests_in_green_when_demand_coupling_weak`.
+- 2026-04-26 — Phase 3b complete. `solve_power_demand_cap_and_trade_with_green`
+  layers Hasan green-tech investment G onto the Phase 3a backbone via
+  the per-time convention (G in currency/time, R(G) in emissions/time —
+  documented departure from Hasan's per-cycle convention; same
+  functional form, just different units on a, b). The TC decomposes
+      TC = TC_3a(D(G)) + G - p_c R(G) - p_c C_cap
+  so for fixed G the optimum (Q*, T*, B*) is exactly Phase 3a at the
+  G-dependent demand D(G); the green-tech term is independent of
+  (Q, T, B). The full optimum is a univariate search over G in
+  [0, a/(2b)]. When demand is decoupled (D_1 = 0), TC_3a(D(G)) is
+  constant and the FOC d/dG[G - p_c R(G)] = 0 admits a closed form
+      G* = max(0, (a - 1/p_c) / (2b))   (p_c > 0)
+      G* = 0                             (p_c = 0)
+  with the interior solution active iff p_c a > 1. 52 tests passing
+  (227 across the suite): p_c=0 reduces to Phase 3a at D=D_0+m·v
+  to 1e-12; the closed-form G* is verified across 8 (p_c, a, b) grids;
+  G* monotone non-decreasing in p_c; G* and R(G*) -> a/(2b), a^2/(4b)
+  as p_c -> infinity; the optimal-cost identity holds for both the
+  decoupled (closed-form) and coupled (numerical) paths; FOC numerical
+  gradient ~ 0 at interior G* in the demand-coupled case.
