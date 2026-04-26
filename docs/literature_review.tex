@@ -1,0 +1,392 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage[protrusion=true,expansion=false]{microtype}
+\usepackage{setspace}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[hidelinks,colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+
+% ---------- Spacing ----------
+\onehalfspacing
+
+% ---------- Section formatting ----------
+\titleformat{\section}{\Large\bfseries\color{blue!40!black}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{blue!30!black}}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4ex plus 1ex minus .2ex}{0.8ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{1.0ex plus .8ex minus .2ex}{0.6ex plus .2ex}
+
+% ---------- Header / Footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape Literature Review \& Research Gap}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+% ---------- Custom commands ----------
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\paperref}[1]{\textit{#1}}
+
+% ---------- Title ----------
+\title{
+  \vspace{-1.5cm}
+  \rule{\linewidth}{0.4pt}\\[0.4em]
+  {\Huge\bfseries Literature Review and Research Gap}\\[0.3em]
+  {\Large Inventory Management under Carbon Emission Regulations \\ and Time-Varying Demand}\\[0.4em]
+  \rule{\linewidth}{0.4pt}
+}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+% ===== Abstract =====
+\begin{abstract}
+\noindent
+This document synthesises the findings of five seminal works that lie at the
+intersection of \emph{inventory control}, \emph{carbon-emission regulation}, and
+\emph{time-varying demand}. The reviewed papers fall into two largely
+disjoint streams: (i) carbon-aware inventory models, in which classical
+Economic Order Quantity (EOQ) frameworks are extended to incorporate
+emission caps, carbon taxes, cap-and-trade markets, and green-technology
+investment; and (ii) inventory models with non-stationary
+demand patterns, particularly the \emph{power demand pattern}. After
+critically appraising each contribution, the document identifies the gaps
+that remain at the confluence of the two streams and proposes specific
+directions for future research.
+\end{abstract}
+
+\vspace{0.3em}
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+
+The intensifying global focus on climate change has placed
+\emph{operational} levers of carbon abatement at the centre of
+sustainable supply-chain research. Regulators across the European Union,
+North America, and Asia have implemented a variety of carbon-pricing
+mechanisms, including carbon taxes, mandatory emission caps, and
+cap-and-trade markets, while consumer pressure increasingly rewards firms
+that publicise green-technology investments and sustainability
+campaigns. In parallel, the classical inventory-control literature has
+relaxed the constant-demand assumption of the standard EOQ model and
+explored several time-varying demand structures, of which the
+\emph{power demand pattern} captures both products whose demand
+intensifies near the end of the cycle (e.g., petrol, staple
+groceries) and products whose demand wanes (e.g., perishables).
+
+Each of these two streams has matured independently, yet their
+intersection, namely \emph{carbon-constrained inventory control under
+non-stationary, power-form demand}, remains comparatively unexplored.
+This review summarises five representative works that anchor each
+stream, exposes their methodological assumptions, and articulates the
+research gap that motivates further investigation.
+
+% ============================================================
+\section{Overview of the Reviewed Papers}
+% ============================================================
+
+Table \ref{tab:overview} provides a high-level comparison of the five
+reviewed studies along the dimensions of demand structure, regulatory
+framework, decision variables, and central methodological contribution.
+
+\begin{table}[h!]
+\centering
+\caption{Comparative overview of the five reviewed papers.}
+\label{tab:overview}
+\renewcommand{\arraystretch}{1.25}
+\small
+\begin{tabularx}{\textwidth}{@{}p{3.6cm}p{2.4cm}p{2.7cm}YY@{}}
+\toprule
+\textbf{Reference} & \textbf{Demand} & \textbf{Carbon Policy} & \textbf{Decision Variable(s)} & \textbf{Core Contribution} \\
+\midrule
+Hua, Cheng \& Wang (2011)\textsuperscript{$\dagger$}    & Constant       & Cap-and-trade                                  & Order quantity                                       & Closed-form EOQ extension under carbon trading; analyses effect of cap and price. \\
+Benjaafar, Li \& Daskin (2013)                          & Constant       & Strict cap, tax, cap-and-offset, cap-and-trade & Lot size, multi-firm coordination                    & Lot-sizing models; quantifies value of operational adjustment vs.\ technology investment and supply-chain collaboration. \\
+Hasan, Roy, Daryanto \& Wee (2021)                      & Linear in green tech.\ \& promotion & Carbon tax, cap-and-trade, strict cap & Order quantity, green-tech investment             & Three integrated EOQ models with green investment and demand-stimulating promotion. \\
+Sicilia, Gonz\'alez-De-la-Rosa, Febles-Acosta \& Alcaide-L\'opez-de-Pablo (2014) & Power pattern  & None                                      & Reorder point, scheduling period, lot size           & Algorithmic optimal policy for production-inventory system with backlogged shortages and proportional production rate. \\
+\bottomrule
+\end{tabularx}
+\\[0.3em]
+{\footnotesize\textsuperscript{$\dagger$} The SSRN working paper (\texttt{ssrn1628953}) is the pre-print of Hua et al.\ (2011) and is therefore treated as a single contribution.}
+\end{table}
+
+% ============================================================
+\section{Thematic Literature Review}
+% ============================================================
+
+\subsection{Stream 1: Carbon-aware Inventory Management}
+
+\subsubsection*{Hua, Cheng \& Wang (2011)}
+
+Hua, Cheng and Wang formulate one of the earliest closed-form EOQ
+extensions in which a retailer operates under a cap-and-trade emission
+regime. The authors explicitly model carbon emissions arising from two
+operational sources: (i)~transportation of replenishment orders, taken to
+be linear in the number of orders placed per unit time, and (ii)~warehouse
+storage, taken to be linear in the average inventory level. By appending the
+purchased or sold carbon credits to the classical EOQ cost function, they
+derive an optimal order quantity $Q^{*}$ and prove a clean structural
+result that compares $Q^{*}$ to the cost-minimising EOQ quantity $Q^{0}$
+and the emission-minimising quantity $\hat{Q}$.
+
+A central insight of the paper is the role played by the ratio
+$g/e$ (warehouse-to-transport carbon intensity) versus the ratio
+$h/K$ (warehouse-to-transport monetary intensity). When the two ratios
+coincide, the cost-minimising order quantity simultaneously minimises
+emissions, so participation in the carbon market is unnecessary; when
+they differ, $Q^{*}$ falls strictly between $Q^{0}$ and $\hat{Q}$. The
+analytical and numerical results highlight that carbon trading
+\emph{mechanically links} cost and emissions, but they rest on the strong
+assumption of \emph{deterministic, time-invariant} demand and an
+exogenous carbon price.
+
+\subsubsection*{Benjaafar, Li \& Daskin (2013)}
+
+Benjaafar, Li and Daskin generalise the carbon-aware paradigm beyond a
+single firm and beyond cap-and-trade, building on the multi-period
+single- and multi-stage lot-sizing models that underlie much of the
+operations-management literature. Their contribution is fourfold.
+First, they show that emission parameters can be associated with each
+decision variable in classical lot-sizing problems, yielding tractable
+formulations under four distinct policies: strict caps, carbon tax,
+cap-and-offset, and cap-and-trade. Second, by varying these parameters
+numerically, they generate twelve managerial observations, of which the
+most striking is that \emph{operational adjustment alone}, with no
+investment in greener technology, can deliver substantial emission
+reductions at modest cost. Third, they isolate the conditions under
+which tighter caps may paradoxically increase aggregate emissions,
+thereby informing policy design. Fourth, they evaluate the value of
+\emph{supply-chain collaboration}, demonstrating that the gains depend
+sensitively on the prevailing regulatory mechanism and on whether
+emission caps are imposed firm-wise or supply-chain-wide.
+
+The analytical core of the paper, an EOQ-style appendix that derives a
+piecewise-defined optimal order quantity under a strict cap, complements
+the multi-period programming results and unifies the single-firm
+treatment of Hua et al.\ (2011) with multi-firm extensions. Like its
+predecessor, however, the model presumes deterministic, stationary
+demand.
+
+\subsubsection*{Hasan, Roy, Daryanto \& Wee (2021)}
+
+The work of Hasan and colleagues represents the most recent and
+arguably the most behaviourally rich contribution to the
+carbon-aware EOQ literature reviewed here. They formulate three
+integrated profit-maximisation models that simultaneously optimise the
+order quantity $Q$ and the green-technology investment $G$ under (i)~a
+carbon tax, (ii)~cap-and-trade, and (iii)~a strict carbon limit. Two
+features distinguish their formulation. First, the green investment is
+modelled by the concave function $R(G)=aG-bG^{2}$, capturing
+diminishing returns of abatement technology. Second, demand is modelled as
+$D(G,v)=D_{0}+D_{1}R(G)+mv$, so that demand is stimulated both by
+emission-reduction effort and by an explicit promotion level $v$.
+
+Their numerical and sensitivity analyses produce three policy-relevant
+findings: (i)~the carbon \emph{tax rate} significantly drives total
+profit, whereas the cap level under cap-and-trade or under a strict
+limit is relatively benign; (ii)~promotion is profitable across all
+three regimes; and (iii)~green-technology investment is profitable
+because it contracts the emissions exposure that must be priced through
+trading or limited by the cap. The model nevertheless remains rooted in
+a single buyer's EOQ structure with a \emph{linear} demand function,
+i.e.\ no explicit time variation within a cycle.
+
+\subsection{Stream 2: Inventory Management under Power Demand}
+
+\subsubsection*{Sicilia, Gonz\'alez-De-la-Rosa, Febles-Acosta \& Alcaide-L\'opez-de-Pablo (2014)}
+
+The paper of Sicilia and colleagues anchors the second stream. They
+analyse a deterministic single-item production-inventory system in which
+demand follows the \emph{power demand pattern}
+$D(t) = (r/T)\,(t/T)^{(1/n)-1}/n$, parameterised by the index $n>0$.
+Values of $n$ greater than one represent demand that
+intensifies as the cycle progresses (e.g.,\ petrol or staple
+groceries running short toward the end of a replenishment cycle), while
+$n<1$ captures demand that decays (e.g.,\ perishable items losing
+appeal as the expiry date approaches). Production rate is taken to be
+proportional to demand rate, $P(t)=\alpha D(t)$ with $\alpha>1$, so that
+inventory accumulates during the replenishment phase, after which a
+shortage-and-backlog phase concludes the cycle.
+
+The authors minimise the cycle-averaged sum of holding, shortage, and
+ordering costs over two decision variables: the reorder point $s$ and
+the scheduling period $T$. They prove that the first-order optimality
+condition reduces to a single non-linear equation in a normalised
+variable $x \in (0, 1-1/\alpha)$, demonstrate uniqueness of the root via
+the Intermediate Value Theorem, and propose a four-step algorithm to
+recover the economic lot size $Q^{*}$ and the minimum cost $C^{*}$.
+Two limiting cases are recovered as sanity checks: (i)~$n=1$ collapses
+the model to the classical economic production quantity (EPQ) with
+backorders, and (ii)~$\alpha\to\infty$ recovers the EOQ with power
+demand and instantaneous replenishment of Sicilia et al.\ (2012). The
+authors deliberately omit any environmental considerations, identifying
+deterioration and lost-sales settings as natural extensions, but
+\emph{not} carbon emissions.
+
+% ============================================================
+\section{Synthesis and Cross-Cutting Observations}
+% ============================================================
+
+Three cross-cutting observations emerge from a comparative reading of
+the five papers.
+
+\textbf{First, demand is consistently simplified in carbon-aware
+models.} Hua et al.\ (2011), Benjaafar et al.\ (2013), and Hasan et al.\
+(2021) all retain a \emph{constant-rate} demand assumption (or, at most,
+a static linear function of decision variables in Hasan et al.). None of
+these models allows demand to vary \emph{within} an inventory cycle,
+even though much of the empirical inventory-management literature
+documents pronounced intra-cycle non-stationarity for many product
+categories. This simplification, while analytically convenient, may
+yield biased order-quantity recommendations whenever the underlying
+demand exhibits a strong power-form profile.
+
+\textbf{Second, the power-demand literature has remained
+environmentally agnostic.} Sicilia et al.\ (2014), and the antecedent
+work they cite (Naddor, 1966; Datta and Pal, 1988; Lee and Wu, 2002;
+Sicilia et al., 2012; Mishra and Singh, 2013), focus exclusively on
+cost minimisation. Neither carbon-emission constraints nor green-
+technology investment have been embedded into the power-demand framework.
+
+\textbf{Third, regulatory variety is unevenly modelled across
+streams.} The carbon-aware stream has progressed from a single mechanism
+(cap-and-trade in Hua et al.) to multi-mechanism comparisons (Benjaafar
+et al.\ and Hasan et al., who jointly cover strict caps, taxes,
+cap-and-trade, and cap-and-offset). The power-demand stream offers no
+analogue. Hence, even if a power-demand inventory model were augmented
+with emissions, it would not be obvious \emph{which} regulatory regime
+should accompany it.
+
+% ============================================================
+\section{Research Gap}
+% ============================================================
+
+Synthesising the above, we identify the following research gap, which
+motivates further investigation.
+
+\begin{quote}
+\textit{No existing study formulates an inventory model that
+simultaneously accommodates a power-form, time-varying demand pattern
+and one or more carbon-emission regulatory mechanisms (carbon tax,
+cap-and-trade, or strict cap), while also allowing for green-technology
+investment, backlogged shortages, and a finite production rate.}
+\end{quote}
+
+\noindent
+This gap can be unpacked into the following more specific deficiencies.
+
+\begin{enumerate}[label=\textbf{G\arabic*.},leftmargin=2.4em,itemsep=0.4em]
+
+\item \textbf{Demand realism in carbon-aware inventory models.}
+The three carbon-aware studies reviewed assume constant or
+linear-in-investment demand. Extending the power-demand pattern of
+Sicilia et al.\ (2014) into the EOQ formulations of Hua et al.\ (2011)
+and Hasan et al.\ (2021) would (i) yield richer, more realistic
+order-quantity policies and (ii) test whether the central
+managerial insights of the carbon-aware literature, e.g.,\ the dominance
+of operational adjustment over technology investment in
+Benjaafar et al.\ (2013), survive under non-stationary demand.
+
+\item \textbf{Carbon footprint of shortage-and-backlog regimes.}
+Sicilia et al.\ (2014) explicitly permit fully backlogged shortages, but
+no carbon-aware paper considers the emissions implications of
+backordering, e.g.,\ expedited shipping or rush-mode transportation
+required to clear a backlog. A model that prices the
+\emph{emissions cost of backlogged shortages}, in addition to the usual
+monetary shortage cost, would constitute a novel contribution.
+
+\item \textbf{Joint optimisation of order quantity, scheduling period, and green-technology investment.}
+The carbon-aware models reviewed optimise either order quantity (Hua
+et al.) or order quantity together with a scalar investment level
+(Hasan et al.); they do not jointly optimise an additional scheduling
+period, as is natural under a time-varying demand. Sicilia et al.\
+(2014), by contrast, optimise the scheduling period but not the
+investment level. A unified model that treats $Q$, $T$, and $G$ as
+co-decision variables remains absent.
+
+\item \textbf{Regulatory comparison under non-stationary demand.}
+Hasan et al.\ (2021) and Benjaafar et al.\ (2013) compare regulatory
+mechanisms only under static demand. Whether the qualitative ranking of
+mechanisms, e.g.,\ Hasan et al.'s observation that the carbon tax rate
+matters more than the cap level, persists when demand follows a power
+pattern is an open empirical question with policy implications.
+
+\item \textbf{Demand-investment coupling under power demand.}
+Hasan et al.\ (2021) introduce demand as an increasing function of
+green-technology investment and promotion level. No corresponding
+formulation exists in the power-demand literature; in particular, the
+\emph{shape parameter} $n$ of the power pattern itself may plausibly
+depend on green-marketing effort, an avenue that has been entirely
+overlooked.
+
+\item \textbf{Deteriorating items at the intersection.} Sicilia et al.\
+(2014) explicitly flag deterioration as a future direction for the
+power-demand model, while none of the carbon-aware papers reviewed
+incorporates deterioration. A model that combines deterioration, power
+demand, and a carbon-pricing mechanism would address two open
+directions simultaneously.
+
+\end{enumerate}
+
+\noindent\textbf{Practical Implications.}\;
+Closing this gap would benefit several stakeholders. Operations managers
+of products with strong power-form demand (e.g.\ fuel retailers,
+staple-food distributors, fresh-produce wholesalers) currently lack
+analytical tools that calibrate replenishment and shortage-management
+decisions to a carbon-priced environment. Policy makers, who already
+ask whether a carbon tax or a cap-and-trade scheme is preferable, would
+gain insight into how the answer is modulated by the demand profile of
+regulated industries. Finally, sustainability-oriented firms
+contemplating green-technology investment would acquire a sharper view of
+the conditions under which such investment yields net profit improvement.
+
+% ============================================================
+\section{Conclusion}
+% ============================================================
+
+The five papers reviewed here collectively map two well-developed but
+largely separate research streams. The carbon-aware EOQ stream,
+represented by Hua, Cheng \& Wang (2011), Benjaafar, Li \& Daskin
+(2013), and Hasan, Roy, Daryanto \& Wee (2021), has progressively
+broadened the set of regulatory mechanisms, decision variables (now
+including green-technology investment), and behavioural ingredients
+(promotion-sensitive demand). The non-stationary-demand stream,
+exemplified by Sicilia, Gonz\'alez-De-la-Rosa, Febles-Acosta \&
+Alcaide-L\'opez-de-Pablo (2014), has refined the algorithmic toolkit
+for power-demand systems. Their integration, an inventory model that
+simultaneously features a power-form demand pattern, multiple carbon-
+emission regulatory mechanisms, optional green-technology investment,
+and backlogged shortages, constitutes a clear and as-yet-unaddressed
+research opportunity at the frontier of sustainable operations.
+
+% ============================================================
+\section*{References}
+\addcontentsline{toc}{section}{References}
+% ============================================================
+
+\begin{enumerate}[leftmargin=2em,itemsep=0.35em,label={[\arabic*]}]
+\item Benjaafar, S., Li, Y., \& Daskin, M.\ (2013). Carbon Footprint and the Management of Supply Chains: Insights From Simple Models. \emph{IEEE Transactions on Automation Science and Engineering}, 10(1), 99--116.
+
+\item Hasan, M.\,R., Roy, T.\,C., Daryanto, Y., \& Wee, H.-M.\ (2021). Optimizing inventory level and technology investment under a carbon tax, cap-and-trade and strict carbon limit regulations. \emph{Sustainable Production and Consumption}, 25, 604--621.
+
+\item Hua, G., Cheng, T.\,C.\,E., \& Wang, S.\ (2011). Managing carbon footprints in inventory management. \emph{International Journal of Production Economics}, 132(2), 178--185.
+
+\item Hua, G., Cheng, T.\,C.\,E., \& Wang, S.\ (2010). Managing carbon footprints in inventory management. SSRN Working Paper No.\ 1628953. (Pre-print of Hua et al., 2011.)
+
+\item Sicilia, J., Gonz\'alez-De-la-Rosa, M., Febles-Acosta, J., \& Alcaide-L\'opez-de-Pablo, D.\ (2014). Optimal policy for an inventory system with power demand, backlogged shortages and production rate proportional to demand rate. \emph{International Journal of Production Economics}, 155, 163--171.
+\end{enumerate}
+
+\end{document}
